@@ -4,7 +4,7 @@
 \title{Dynamic adjustment of training sets - moving windows reconstruction}
 \description{The moving window method identifies for each single fossil diatom sample an optimal training set using DCA (CA, CCA) or simple distance measurement in combination with WA or WA-PLS error statistik. Downweighting of rare taxa can be chosen as non significant taxa can bee excluded }
 \usage{
-mw(train_set, train_env, core_data, method = c("wapls", "wa","pom"), 
+mw(train_set, train_env, core_data, method = c("wapls", "wa","mft"), 
 	comp = 4, val = c("boot", "loo", "10-cross"), run = 100, 
 	mwsize = c(20, 40, 60), dim = c(2, 3, 4), 
 	mw.type = c("dca", "ca", "cca","sample"), 
@@ -38,7 +38,7 @@ mw(train_set, train_env, core_data, method = c("wapls", "wa","pom"),
 Using mw, for each sample 3 WA-PLS runs (default) are calculated using
 100 bootstrap runs for each. This takes time. The reconstruction for a whole
 sedimet (80-100 samples) core can take several minutes. Please try first with
-a small test set or with a low value for run (see examples), before running the whole reconstruction! Data must be
+a small test set or with a low value for run (see examples), before running the whole reconstruction! At least the number of componentes (default is 4) can bee reduced to make the function faster. Data must be
 organised in the same way as running cca or dca in package vegan. This approach
 needs large training sets, like the combinded TP data set from EDDI. 
 }
@@ -62,10 +62,13 @@ data(dud.df)
 data(train_set.MV)
 data(train_env.MV)
 test<-dud.df[1:3,]
-fit<-mw(train_set.MV,train_env.MV,test,mwsize = c(40, 60),run=10)
+fit<-mw(train_set.MV,train_env.MV,test,mwsize = c(40,60),val="boot",run=5,comp=3)
 names(fit)
 
-fit<-mw(train_set.MV,train_env.MV,test,mwsize = c(40, 60),run=10,
+fit<-mw(train_set.MV,train_env.MV,test,mwsize = c(40,60,80)
+	,comp=3,method="wa",val="loo",)
+
+fit<-mw(train_set.MV,train_env.MV,test,mwsize = c(40,60),run=5,
     	mw.type="sample",dist.m="bray",dw=TRUE)
 }
 

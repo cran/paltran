@@ -1,7 +1,7 @@
 Package: paltran
 Type: Package
 Title: WA, WA-PLS, MW and POM for paleolimnology
-Version: 1.1
+Version: 1.2-0
 Date: 2008-04-29
 Author: Sven Adler
 Maintainer: Sven Adler <sven.adler2@uni-rostock.de>
@@ -14,6 +14,6 @@ Description: This package contains functions for paleolimnology -
 License: GPL (>= 2)
 URL:
         http://www.biologie.uni-rostock.de/abt/botanik/AG-Phykologie/index-engl.htm
-Packaged: Fri Jun 26 08:48:47 2009; botanikschule-B
+Packaged: Thu Jul 9 09:20:25 2009; botanikschule-B
 Repository: CRAN
-Date/Publication: 2009-06-26 17:53:20
+Date/Publication: 2009-07-18 16:13:11

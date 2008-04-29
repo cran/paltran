@@ -1,6 +1,6 @@
 
 
-mw<-function(train_set,train_env,core_data,method=c("wapls","wa","pom"),comp=4,val=c("boot","loo","10-cross"),run=100,mwsize=c(20,40,60),dim=c(2,3,4),mw.type=c("dca","ca","cca","sample"),dist.m="euclidean",rmsep.incl=TRUE,env.trans=FALSE,spec.trans=FALSE,rplot=TRUE,drop.non.sig=FALSE,min.occ=1,scale=FALSE,dw=FALSE)
+mw<-function(train_set,train_env,core_data,method=c("wapls","wa","mft"),comp=4,val=c("boot","loo","10-cross"),run=100,mwsize=c(20,40,60),dim=c(2,3,4),mw.type=c("dca","ca","cca","sample"),dist.m="euclidean",rmsep.incl=TRUE,env.trans=FALSE,spec.trans=FALSE,rplot=TRUE,drop.non.sig=FALSE,min.occ=1,scale=FALSE,dw=FALSE)
 
 {
 test_set<-core_data
@@ -274,9 +274,9 @@ for(i in 1:row1)
                             }
                     }
           
-                if (method=="pom")
+                if (method=="mft")
                     {
-                        mwstat<-pom(train_set.mw,train_env.mw,test_set,d.plot="FALSE",val="loo",out="FALSE",scale=TRUE)
+                        mwstat<-mft(train_set.mw,train_env.mw,test_set,d.plot="FALSE",val="loo",out="FALSE",scale=TRUE)
                         wa_per<-c(mwstat$performance,1,1)
                         wapls_comp.mw[k,]<-wa_per
                         mw_env[k]<-mwstat[[5]][i]

@@ -1,3 +1,4 @@
+
 wa<-function(...,d.plot=TRUE,env.trans=FALSE,spec.trans=FALSE,diagno=TRUE,val=c("none","10-cross","loo","boot"),run=10,scale=FALSE,seed=1,out=TRUE,desh.meth=c("class","inverse"),drop.non.sig=FALSE,min.occ=1)
 {
     
@@ -160,7 +161,7 @@ wa1<-function(...)
     RMSE<-sqrt(mean(dif^2))       
     R2<-summary(fit.lm)$r.squared
     mean_er<-mean((dif))
-    max_er<-max(dif)
+    max_er<-max(abs(dif))
     results<-list(opt,mean_er,max_er,inferred,R2,RMSE,env_infd_train,opt_d)
     results    
 }  # end of wa1
@@ -186,7 +187,7 @@ loo.wa<-function(train_set,train_env)
         loo1[i]<-sum(opt*test_set.c)/sum(test_set.c)
         }
     dif<-loo1-train_env
-    max_er.c<-max(dif)
+    max_er.c<-max(abs(dif))
     mean_er.c<-mean(dif)
     RMSEP<-sqrt(mean(dif^2))
     R2.X<-summary(lm(loo1~train_env))$r.squared
@@ -226,7 +227,7 @@ loo_pred.wa<-function(train_set,train_env,test_set)
             loo_pred[,i]<-sum(opt_d*t(test_set.opt),na.rm=TRUE)/sum(test_set.opt)
       }
     dif<-loo1-train_env
-    max_er.c<-max(dif)
+    max_er.c<-max(abs(dif))
     mean_er.c<-mean(dif)
     RMSEP<-sqrt(mean(dif^2))
     loo_inf<-apply(loo_pred,1,mean)
@@ -290,7 +291,7 @@ tencross.wa<-function(train_set,train_env,run1=run)
     row.names(loo1)<-row.names(train_set)
     colnames(loo1)<-paste("run",1:run1)
     dif<-loo1_mean-train_env                             
-    max_er.c<-max(dif)                                   
+    max_er.c<-max(abs(dif))                                   
     mean_er.c<-mean(dif)                                 
     RMSEP<-sqrt((sum((dif)^2))/dim(train_set)[1])
     R2.c<-summary(lm(loo1_mean~train_env))$r.squared
@@ -351,7 +352,7 @@ boot1.wa<-function(train_set,train_env,boot=run,...)
     ms_rmsep <- sqrt(ms_s1^2 + ms_s2^2)
     mean_error<-result_inf-train_env
     mean_error1<-mean(loo3[,1]-loo3[,2],na.rm=TRUE)
-    max_error<-max(result_inf-train_env,na.rm=TRUE)
+    max_error<-max(abs(result_inf-train_env),na.rm=TRUE)
     R2.c<-summary(lm(result_inf~train_env))$r.squared
     result<-list(R2.c,mean_error1,max_error,ms_rmsep,result_inf,mean_error,s1,s2,ms_s1,ms_s2,s_rmsep,result_sd)
 }
@@ -412,7 +413,7 @@ s_rmsep <- sqrt(s1^2 + ms_s2^2)
 ms_rmsep <- sqrt(ms_s1^2 + ms_s2^2)
 mean_error<-result_inf-train_env
 mean_error1<-mean(loo3[,1]-loo3[,2],na.rm=TRUE)
-max_error<-max(result_inf-train_env,na.rm=TRUE)
+max_error<-max(abs(result_inf-train_env),na.rm=TRUE)
 
 R2.c<-summary(lm(result_inf~train_env))$r.squared
 loo_test.mean<-apply(loo_test,1,function(x) mean(x,na.rm=TRUE))
@@ -441,7 +442,7 @@ run_wa1<-wa1(train_set,train_env)
 if (val=="loo")
     val1<-"Leave-one-out"
 if (val=="10-cross") 
-    val1<-"10-fold-crossvalidation"
+    val1<-"10-fold-cross validation"
 if (val=="boot")
     val1="bootstrap"
 
@@ -493,7 +494,12 @@ if (val=="boot")
          if (data_l==3)
             error<-boot2.wa(train_set,train_env,test_set)
      }
+
+if (desh.meth=="inverse")
 error_m<-matrix(nrow=1,ncol=8,dimnames=list("wa-inv.desh.",c("RMSE","R2","Ave_Bias","Max_Bias","X_R2","X_Ave_Bias","X_Max_Bias","RMSEP")))
+if (desh.meth=="class")
+error_m<-matrix(nrow=1,ncol=8,dimnames=list("wa-class.desh.",c("RMSE","R2","Ave_Bias","Max_Bias","X_R2","X_Ave_Bias","X_Max_Bias","RMSEP")))
+
 error_m[1,1]<-run_wa1[[6]]
 error_m[1,2]<-run_wa1[[5]]
 error_m[1,3]<-run_wa1[[2]]

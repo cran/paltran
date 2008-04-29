@@ -27,12 +27,13 @@ wapls(..., comp = 4, d.plot = TRUE, plot.comp = "RMSEP", env.trans = FALSE,
   \item{min.occ}{minimum occurrence: all taxa with less than min.occ will be deleted from the training set}
 }
 \details{
- The 10-fold cross validation is much more slower than the bootstrap or Leave-one-out, because 10 times more wapls-runs must bee performed than using e.g. bootstrap (within the same number of runs). The RMSEP of Leave one out is slightly different from C2. In this algorithm before each run of the loop the new training set (each time one sample is taken out) is controlled for zero species (the same procedure as in wa, there C2 does the same). In general when comparring the results of C2 and paltran, be shure, that the decimalplaces of the data in both training sets are equal (e.g. chose scale=T and the option percent data in C2). 
+ The 10-fold cross validation is much more slower than the bootstrap or Leave-one-out, because 10 times more wapls-runs must bee performed than using e.g. bootstrap (within the same number of runs). The RMSEP of Leave one out is slightly different from C2. In this algorithm before each run of the loop the new training set (each time one sample is taken out) is controlled for zero species and removed (the same procedure as in wa, there C2 does the same). If that row is deleted from the algorithm, the results are equal for LOO. As C2 and R runs with different random numbers, the results of boottrap and 10 fold cross validation are only equal when using a high number of runs. 
 }
 \value{
 
   \item{species in train.set }{Number of non zero species in each sample of the training set}
   \item{N2 train.set  }{Hill's N2 of each sample of the training set}
+\item{updated opt. }{updated optima (see reference)}  
 \item{sample scores }{sample scores of the training set}  
 \item{inferred train.set  }{inferred environmental parameter for the training set}
 \item{performance  }{performance of the wa-pls-regression }
@@ -57,7 +58,7 @@ wapls(..., comp = 4, d.plot = TRUE, plot.comp = "RMSEP", env.trans = FALSE,
 data(train_set.MV)
 data(train_env.MV)
 data(dud.df)
-try<-wapls(train_set.MV,train_env.MV,dud.df,val="boot",run=5)
+try<-wapls(train_set.MV,train_env.MV,dud.df,val="boot")
 
 
 }

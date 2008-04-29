@@ -1,5 +1,5 @@
 
-pom<-function(...,d.plot=TRUE,scale=TRUE,datatype=TRUE,min.occ=4,set.zero=FALSE,not.av=c("zero","lower","max"),val="loo",class=c(1,5,10,30,60),out=TRUE) 
+mft<-function(...,d.plot=TRUE,scale=TRUE,datatype=TRUE,min.occ=4,set.zero=FALSE,not.av=c("zero","lower","max"),val="loo",class=c(1,5,10,30,60),out=TRUE) 
 {
     data<-list(...)
     train_set <- as.matrix(data[[1]])

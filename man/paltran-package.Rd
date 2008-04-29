@@ -16,7 +16,7 @@ This package contains functions for paleolimnology -
 \tabular{ll}{
 Package: \tab paltran\cr
 Type: \tab Package\cr
-Version: \tab 1.1\cr
+Version: \tab 1.2-0\cr
 Date: \tab 2009-03-06\cr
 License: \tab GPL (>= 2)\cr
 LazyLoad: \tab yes\cr

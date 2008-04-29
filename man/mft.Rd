@@ -1,12 +1,12 @@
-\name{pom}
-\alias{pom}
+\name{mft}
+\alias{mft}
 
-\title{ proportional Odds model for Palaeolimnology }
+\title{ multinomial transfer function for Palaeolimnology }
 \description{ Here the species abundances were assigned to different
 abundance classes, for each class a species response curve is generated using GLM. These response
 curves are used to infer the environmental parameter of interest (s. Details)}
 \usage{
-pom(..., d.plot = TRUE, scale = TRUE, datatype = TRUE,
+mft(..., d.plot = TRUE, scale = TRUE, datatype = TRUE,
 	min.occ = 4,set.zero = FALSE, not.av = c("zero", "lower", "max"),
 	val = "loo",class=c(1,5,10,30,60),out=TRUE)
 }
@@ -65,7 +65,7 @@ other methods like bootstrap might be incorporated.
 data(train_set.MV)
 data(train_env.MV)
 data(dud.df)
-try<-pom(train_set.MV,train_env.MV,dud.df[1:3,],not.av="max",val=FALSE)
+try<-mft(train_set.MV,train_env.MV,dud.df[1:3,],not.av="max",val=FALSE)
 
 #using "loo" takes several minutes for computing
 

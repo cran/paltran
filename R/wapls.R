@@ -182,8 +182,8 @@ wapls1<-function(...,n_comp=comp)
         env_inf<-matrix(0,ncol=n_comp,nrow=row1)
         r.n1.pre<-matrix(ncol=n_comp,nrow=row1)   
     }
-    
-    train_env.c<-train_env-sum(train_env*rowSums(train_set),na.rm=TRUE)/sum(rowSums(train_set,na.rm=TRUE))
+    sum_sd<-sum(train_env*rowSums(train_set),na.rm=TRUE)/sum(rowSums(train_set,na.rm=TRUE))
+    train_env.c<-train_env-sum_sd
     r<-train_env.c 
     train_env1.c<-as.matrix(train_env.c)
     col<-ncol(train_set)
@@ -191,6 +191,8 @@ wapls1<-function(...,n_comp=comp)
     r.n1<-matrix(ncol=n_comp,nrow=row)
     env_inf_train<-matrix(0,ncol=n_comp,nrow=row)
     train_set.rs<-rowSums(train_set,na.rm=TRUE)
+    updated.opt<-matrix(0,ncol=n_comp,nrow=col)
+    row.names(updated.opt)<-names(train_set)
     divid<-sum(train_set.rs)
     r.n_all<-matrix(NA,ncol=n_comp,nrow=row)
     for (run in 1:n_comp)
@@ -198,7 +200,7 @@ wapls1<-function(...,n_comp=comp)
         for(i in seq_len(col))
             u[i]<-sum(r*train_set[,i],na.rm=TRUE)/sum(train_set[,i],na.rm=TRUE)       
         r.n<-as.vector(colSums(u*t(train_set),na.rm=TRUE)/train_set.rs)
-        
+        updated.opt[,run]<-u+sum_sd
         if (run>1)
             {
                 v<-sum(((train_set.rs*r.n)*r.n1[,(run-1)]))/sum(train_set.rs)
@@ -212,17 +214,18 @@ wapls1<-function(...,n_comp=comp)
                 r.n1[,run]<-(r.n-z)/sqrt(s2)
 
         score<-r.n1[,1:run]
-        fit.lm<-lm(train_env1.c~score,weights=(train_set.rs))
+        weights1<-train_set.rs/divid
+        fit.lm<-lm(train_env1.c~score,weights=(weights1))
 
         env_inf_train.c<-fitted(fit.lm)
-        env_inf_train[,run]<-env_inf_train.c+mean(train_env)
+        env_inf_train[,run]<-env_inf_train.c+sum_sd
         r<-as.vector((-1)*(train_env1.c-env_inf_train.c))
 
         dif<-(env_inf_train[,run]-train_env)
         y<-as.matrix(train_env)
         RMSE[run]<-sqrt(sum((dif)^2)/nrow(train_set))
         mean_error[run]<-mean((dif))
-        max_error[run]<-max(dif)
+        max_error[run]<-max(abs(dif))
         R2[run]<-summary(lm(y~env_inf_train[,run]))$r.squared
 # prediction for test_set
         if (dat==3)
@@ -246,13 +249,13 @@ wapls1<-function(...,n_comp=comp)
                 for (k in 1:run)
                     env_inf[,run]<-env_inf[,run]+fit.lm$coefficients[k+1]*r.n1.pre[,k]
                 env_inf[,run]<-env_inf[,run]+fit.lm$coefficients[1]
-                env_inf[,run]<-env_inf[,run]+mean(train_env)
+                env_inf[,run]<-env_inf[,run]+sum_sd
             }      
     }
-    result<-list(r,R2,RMSE,mean_error,max_error,env_inf,r.n_all,env_inf_train,r.n1,u,r.n1)
+    result<-list(r,R2,RMSE,mean_error,max_error,env_inf,r.n_all,env_inf_train,r.n1,u,r.n1,updated.opt)
   result  
 }   #end of wapls1
-#wapls1(train_set.MV,train_env.MV,test1,n_comp=4)
+
 ##############################         loo                                           ###########################
 
 
@@ -273,7 +276,7 @@ loo.wapls<-function(train_set,train_env,n_comp=comp)
     dif<-(loo1-train_env[,1])
     for (k in seq_len(n_comp))
     {
-    error1[k,3]<-max(dif[,k])
+    error1[k,3]<-max(abs(dif[,k]))
     error1[k,2]<-mean(dif[,k])
     error1[k,4]<-sqrt(sum((dif[,k])^2)/dim_row)
     error1[k,1]<-summary(lm(loo1[,k]~train_env[,1]))$r.squared
@@ -308,7 +311,7 @@ loo2.wapls<-function(train_set,train_env,test_set,n_comp=comp)
     dif<-(loo1-train_env[,1])
     for (k in seq_len(n_comp))
     {
-    error1[k,3]<-max(dif[,k])
+    error1[k,3]<-max(abs(dif[,k]))
     error1[k,2]<-mean(dif[,k])
     error1[k,4]<-sqrt(sum((dif[,k])^2)/dim_row)
     error1[k,1]<-summary(lm(loo1[,k]~train_env[,1]))$r.squared
@@ -383,7 +386,7 @@ tencross.wapls<-function(train_set,train_env,run1=run,n_comp=comp)
             dif<-result_mean.train[,i]-train_env
             error1[i,1]<-summary(lm(result_mean.train[,i]~train_env))$r.squared
             error1[i,2]<-mean(dif)
-            error1[i,3]<-max(dif)
+            error1[i,3]<-max(abs(dif))
             error1[i,4]<-sqrt(mean(dif^2))
          }     
     error<-list(error1[,1],error1[,2],error1[,3],error1[,4],result_mean.train,result_sd.train)
@@ -454,7 +457,7 @@ for (r in 1:n_comp)
     R2.c[r]<-summary(lm(result_inf[,r]~train_env[,1]))$r.square
 
 mean_error<-apply((result_inf-train_env[,1]),2,function(x) mean(x,na.rm=TRUE))
-max_error<-apply((result_inf-train_env[,1]),2,function(x) max(x,na.rm=TRUE))
+max_error<-apply((result_inf-train_env[,1]),2,function(x) max(abs(x),na.rm=TRUE))
 result<-list(R2.c,mean_error,max_error,ms_rmsep,result_inf,ms_s1,ms_s2,result_sd)
 result
 }
@@ -530,7 +533,7 @@ R2.c<-rep(NA,n_comp)
 for (r in 1:n_comp)
     R2.c[r]<-summary(lm(result_inf[,r]~train_env[,1]))$r.square
 mean_error<-apply((result_inf-train_env[,1]),2,function(x) mean(x,na.rm=TRUE))
-max_error<-apply((result_inf-train_env[,1]),2,function(x) max(x,na.rm=TRUE))
+max_error<-apply((result_inf-train_env[,1]),2,function(x) max(abs(x),na.rm=TRUE))
 result<-list(result_sd_ts,s1,s2,result_inf_ts,result_inf,ms_s1,ms_s2,mean_error,max_error,s_rmsep,ms_rmsep,R2.c,result_sd)
 
 result
@@ -552,11 +555,10 @@ boot_train<-NA
 
 
 
+wapls_run<-wapls1(train_set,train_env)
 
-if (dat==2)
-    wapls_run<-wapls1(train_set,train_env)
 if (dat==3)
-    wapls_run<-wapls1(train_set,train_env,test_set)
+    wapls_run2<-wapls1(train_set,train_env,test_set)
  
 result1<-matrix(0,nrow=n_comp,ncol=10,dimnames=list(nam1,c("R2","Mean-error","Max_error","RMSE","R2.c","Mean-error.c","Max-error.c","RMSEP","n_comp","MW")))
         result1[,9]<-seq(1:n_comp)
@@ -567,13 +569,14 @@ result1[,2]<-wapls_run[[4]]
 result1[,3]<-wapls_run[[5]]
 result1[,4]<-wapls_run[[3]]
 scores_wapls<-round(wapls_run[[7]],6)
+upd.opt<-round(wapls_run[[12]],3)
 inf_train_wapls<-wapls_run[[8]]
 inf_test_wapls<-wapls_run$reconstruction
 
 if (val=="loo")
     val1<-"Leave-one-out"
 if (val=="10-cross") 
-    val1<-"10-fold-crossvalidation"
+    val1<-"10-fold-cross validation"
 if (val=="boot")
     val1="bootstrap"
 
@@ -614,7 +617,7 @@ if (out=="TRUE")
 if (dat==2)
 {
     if (val=="none")
-        results<-list(spec_n_train,n2_train,scores_wapls,inf_train_wapls,result1)
+        results<-list(spec_n_train,n2_train,upd.opt,scores_wapls,inf_train_wapls,result1)
 
     
     
@@ -625,8 +628,8 @@ if (dat==2)
         result1[,6]<-wapls_val[[2]]
         result1[,7]<-wapls_val[[3]]
         result1[,8]<-wapls_val[[4]]
-        results<-list(spec_n_train,n2_train,scores_wapls,inf_train_wapls,result1,wapls_val[[5]])
-        names(results)[[6]]<-"inferred train.set.val"
+        results<-list(spec_n_train,n2_train,upd.opt,scores_wapls,inf_train_wapls,result1,wapls_val[[5]])
+        names(results)[[7]]<-"inferred train.set.val"
         }  
    if (val=="10-cross")
         {
@@ -635,9 +638,9 @@ if (dat==2)
         result1[,6]<-wapls_val[[2]]
         result1[,7]<-wapls_val[[3]]
         result1[,8]<-wapls_val[[4]]
-        results<-list(spec_n_train,n2_train,scores_wapls,inf_train_wapls,result1,wapls_val[[5]],wapls_val[[6]])
-        names(results)[[6]]<-"mean(inferred train.set).val"
-        names(results)[[7]]<-"sd(inferred train.set).val"
+        results<-list(spec_n_train,n2_train,upd.opt,scores_wapls,inf_train_wapls,result1,wapls_val[[5]],wapls_val[[6]])
+        names(results)[[7]]<-"mean(inferred train.set).val"
+        names(results)[[8]]<-"sd(inferred train.set).val"
         }
    if (val=="boot")
         {
@@ -646,29 +649,30 @@ if (dat==2)
         result1[,6]<-wapls_val[[2]]
         result1[,7]<-wapls_val[[3]]
         result1[,8]<-wapls_val[[4]]
-        results<-list(spec_n_train,n2_train,scores_wapls,inf_train_wapls,result1,wapls_val[[6]],wapls_val[[7]],wapls_val[[5]],wapls_val[[8]])
-        names(results)[[6]]<-"s1 (boot)"
-        names(results)[[7]]<-"s2 (boot)"
-        names(results)[[8]]<-"mean(inferred train.set).val"
-        names(results)[[9]]<-"sd(inferred train.set).val"
+        results<-list(spec_n_train,n2_train,upd.opt,scores_wapls,inf_train_wapls,result1,wapls_val[[5]],wapls_val[[6]],wapls_val[[7]],wapls_val[[8]])
+        names(results)[[7]]<-"mean(inferred train.set).val"
+        names(results)[[8]]<-"s1 (boot)"
+        names(results)[[9]]<-"s2 (boot)"
+        names(results)[[10]]<-"sd(inferred train.set).val"
         }
     
     names(results)[[1]]<-"species in train.set"
     names(results)[[2]]<-"N2 train.set"
-    names(results)[[3]]<-"sample scores"
-    names(results)[[4]]<-"inferred train.set"
-    names(results)[[5]]<-"performance"  
+    names(results)[[3]]<-"updated opt."
+    names(results)[[4]]<-"sample scores"
+    names(results)[[5]]<-"inferred train.set"
+    names(results)[[6]]<-"performance"  
 }
    
 if (dat==3)
     {
     if (val=="none")
         {
-        results<-list(spec_n_train,n2_train,scores_wapls,inf_train_wapls,result1,spec_n_test,n_test.train,n2_test,wapls_run[[6]])
-        names(results)[[6]]<-"species in core.samples"
-        names(results)[[7]]<-"n species core.samples in train.set"
-        names(results)[[8]]<-"N2 in core.samples"      
-        names(results)[[9]]<-"reconstruction_core.samples"
+        results<-list(spec_n_train,n2_train,upd.opt,scores_wapls,inf_train_wapls,result1,spec_n_test,n_test.train,n2_test,wapls_run2[[6]])
+        names(results)[[7]]<-"species in core.samples"
+        names(results)[[8]]<-"n species core.samples in train.set"
+        names(results)[[9]]<-"N2 in core.samples"      
+        names(results)[[10]]<-"reconstruction_core.samples"
         }
     
     if (val=="loo")
@@ -678,14 +682,14 @@ if (dat==3)
         result1[,6]<-wapls_val[[2]]
         result1[,7]<-wapls_val[[3]]
         result1[,8]<-wapls_val[[4]]
-        results<-list(spec_n_train,n2_train,scores_wapls,inf_train_wapls,result1,wapls_val[[5]],spec_n_test,n_test.train,n2_test,wapls_run[[6]],wapls_val[[6]],wapls_val[[7]])
-        names(results)[[6]]<-"inferred train.set.val"
-        names(results)[[7]]<-"species in core.samples"
-        names(results)[[8]]<-"n species core.samples in train.set"
-        names(results)[[9]]<-"N2 in core.samples"      
-        names(results)[[10]]<-"reconstruction_core.samples"
-        names(results)[[11]]<-"mean(reconstruction_core.samples).val"
-        names(results)[[12]]<-"sd(reconstruction_core.samples).val"
+        results<-list(spec_n_train,n2_train,upd.opt,scores_wapls,inf_train_wapls,result1,wapls_val[[5]],spec_n_test,n_test.train,n2_test,wapls_run2[[6]],wapls_val[[6]],wapls_val[[7]])
+        names(results)[[7]]<-"inferred train.set.val"
+        names(results)[[8]]<-"species in core.samples"
+        names(results)[[9]]<-"n species core.samples in train.set"
+        names(results)[[10]]<-"N2 in core.samples"      
+        names(results)[[11]]<-"reconstruction_core.samples"
+        names(results)[[12]]<-"mean(reconstruction_core.samples).val"
+        names(results)[[13]]<-"sd(reconstruction_core.samples).val"
         }
     
     if (val=="10-cross")
@@ -695,13 +699,13 @@ if (dat==3)
         result1[,6]<-wapls_val[[2]]
         result1[,7]<-wapls_val[[3]]
         result1[,8]<-wapls_val[[4]]
-        results<-list(spec_n_train,n2_train,scores_wapls,inf_train_wapls,result1,wapls_val[[5]],wapls_val[[6]],spec_n_test,n_test.train,n2_test,wapls_run[[6]])
-        names(results)[[6]]<-"mean(inferred train.set).val"
-        names(results)[[7]]<-"sd(inferred train.set).val"
-        names(results)[[8]]<-"species in core.samples"
-        names(results)[[9]]<-"n species core.samples in train.set"
-        names(results)[[10]]<-"N2 in core.samples"      
-        names(results)[[11]]<-"reconstruction_core.samples"
+        results<-list(spec_n_train,n2_train,upd.opt,scores_wapls,inf_train_wapls,result1,wapls_val[[5]],wapls_val[[6]],spec_n_test,n_test.train,n2_test,wapls_run2[[6]])
+        names(results)[[7]]<-"mean(inferred train.set).val"
+        names(results)[[8]]<-"sd(inferred train.set).val"
+        names(results)[[9]]<-"species in core.samples"
+        names(results)[[10]]<-"n species core.samples in train.set"
+        names(results)[[11]]<-"N2 in core.samples"      
+        names(results)[[12]]<-"reconstruction_core.samples"
         }
      if (val=="boot")
         {
@@ -710,23 +714,24 @@ if (dat==3)
         result1[,6]<-wapls_val[[8]]
         result1[,7]<-wapls_val[[9]]
         result1[,8]<-wapls_val[[11]]
-        results<-list(spec_n_train,n2_train,scores_wapls,inf_train_wapls,result1,wapls_val[[6]],wapls_val[[7]],wapls_val[[5]],wapls_val[[13]],spec_n_test,n_test.train,n2_test,wapls_run[[6]],wapls_val[[4]],wapls_val[[1]])
-        names(results)[[6]]<-"s1 (boot)"
-        names(results)[[7]]<-"s2 (boot)"
-        names(results)[[8]]<-"mean(inferred train.set).val "
-        names(results)[[9]]<-"sd(inferred train.set).val"
-        names(results)[[10]]<-"species in core.samples"
-        names(results)[[11]]<-"n species core.samples in train.set"
-        names(results)[[12]]<-"N2 in core.samples"      
-        names(results)[[13]]<-"reconstruction_core.samples"
-        names(results)[[14]]<-"mean(reconstruction_core.samples).val"
-        names(results)[[15]]<-"sd(reconstruction_core.samples).val"  
+        results<-list(spec_n_train,n2_train,upd.opt,scores_wapls,inf_train_wapls,result1,wapls_val[[5]],wapls_val[[6]],wapls_val[[7]],wapls_val[[13]],spec_n_test,n_test.train,n2_test,wapls_run2[[6]],wapls_val[[4]],wapls_val[[1]])
+        names(results)[[7]]<-"mean(inferred train.set).val "
+        names(results)[[8]]<-"s1 (boot)"
+        names(results)[[9]]<-"s2 (boot)"
+        names(results)[[10]]<-"sd(inferred train.set).val"
+        names(results)[[11]]<-"species in core.samples"
+        names(results)[[12]]<-"n species core.samples in train.set"
+        names(results)[[13]]<-"N2 in core.samples"      
+        names(results)[[14]]<-"reconstruction_core.samples"
+        names(results)[[15]]<-"mean(reconstruction_core.samples).val"
+        names(results)[[16]]<-"sd(reconstruction_core.samples).val"  
         }
     names(results)[[1]]<-"species in train.set"
     names(results)[[2]]<-"N2 train.set"
-    names(results)[[3]]<-"sample scores"
-    names(results)[[4]]<-"inferred train.set"
-    names(results)[[5]]<-"performance"  
+    names(results)[[3]]<-"updated opt."
+    names(results)[[4]]<-"sample scores"
+    names(results)[[5]]<-"inferred train.set"
+    names(results)[[6]]<-"performance"  
     }
 
 if (out=="TRUE")
@@ -745,6 +750,11 @@ if (val!="none")
     print(round(result1[,5:8],7))
     cat("",fill=TRUE)
     cat("",fill=TRUE)
+    cat("  RMSEP change [%]",fill=TRUE)
+    cat("",fill=TRUE)
+    for (i in 1:(comp-1))
+        cat(paste("comp",i," : comp",i+1,":  ",round((result1[i,8]-result1[(i+1),8])*100/result1[i,8],2),sep=""),fill=TRUE)
+    
     }
 }   
 ########################################################################plots###############################################################################
