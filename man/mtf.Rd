@@ -1,13 +1,13 @@
-\name{mft}
-\alias{mft}
+\name{mtf}
+\alias{mtf}
 
-\title{ multinomial transfer function for Palaeolimnology }
+\title{ multinomial transfer function for Palaeolimnology}
 \description{ Here the species abundances were assigned to different
 abundance classes, for each class a species response curve is generated using GLM. These response
 curves are used to infer the environmental parameter of interest (s. Details)}
 \usage{
-mft(..., d.plot = TRUE, scale = TRUE, datatype = TRUE,
-	min.occ = 4,set.zero = FALSE, not.av = c("zero", "lower", "max"),
+mtf(..., d.plot = TRUE, scale = TRUE, datatype = TRUE,
+	n= 4,set.zero = FALSE, not.av = c("zero", "lower", "max"),
 	val = "loo",class=c(1,5,10,30,60),out=TRUE)
 }
 
@@ -16,7 +16,7 @@ mft(..., d.plot = TRUE, scale = TRUE, datatype = TRUE,
   \item{d.plot}{ if TRUE diagnostic plots are given at the end of the analysis}
   \item{scale}{should the data scaled up to 100 percent? (Default)}
   \item{datatype}{What kind of data input? TRUE for percentage data, otherwise no transformation to class date will bee done}
-  \item{min.occ}{minimum number of species occurrence within on class } 
+  \item{n}{minimum number of species occurrence within on class } 
   \item{set.zero}{If a species occurs within on class less than n time the values will be set as zero, if set.zero = TRUE. If set.zero = FALSE, the values will be allocate to the next lower class }
   \item{not.av}{If a species occurs within a abundance class that is not given in the training set, three possibilities are available. "zero" means that this species will be excluded, "lower" stands for to use the next lower class density. If "max" is chosen, the cumulative species response curve of all classes will be calculate and use}
   \item{val}{ validation method: So fare only Leave-one-out is performed }
@@ -65,7 +65,7 @@ other methods like bootstrap might be incorporated.
 data(train_set.MV)
 data(train_env.MV)
 data(dud.df)
-try<-mft(train_set.MV,train_env.MV,dud.df[1:3,],not.av="max",val=FALSE)
+try<-mtf(train_set.MV,train_env.MV,dud.df[1:3,],not.av="max",val=FALSE)
 
 #using "loo" takes several minutes for computing
 

@@ -16,8 +16,8 @@ This package contains functions for paleolimnology -
 \tabular{ll}{
 Package: \tab paltran\cr
 Type: \tab Package\cr
-Version: \tab 1.2-0\cr
-Date: \tab 2009-03-06\cr
+Version: \tab 1.3-0\cr
+Date: \tab 2010-02-06\cr
 License: \tab GPL (>= 2)\cr
 LazyLoad: \tab yes\cr
 }
@@ -30,9 +30,8 @@ Sven Adler <sven.adler2@uni-rostock.de>}
 ter Braak, C.J.F. & van Dam, H. 1989. Inferring pH from diatoms: a comparison of old and new calibration methods. Hydrobiologia 178:209-23. 
 ter Braak, C.J.F. & Juggins, S. 1993. Weighted averaging partial least squares regression WA-PLS: an improved method for reconstructing environmental variables from species assemblages. Hydrobiologia 269:485-502. 
 Huebener, T., Dressler,M., Schwarz,A.,Langner, K., Adler,S. 2008. Dynamic adjustment of training sets (`moving windows` reconstruction) by using transfer functions in paleolimnology -a new approache, J. o. Paleolimnology 40, 79-95
-
-
 }
+
 \keyword{ package }
 \seealso{
 package analogue by G. Simpson and J. Oksanen

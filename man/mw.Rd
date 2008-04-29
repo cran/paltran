@@ -4,13 +4,13 @@
 \title{Dynamic adjustment of training sets - moving windows reconstruction}
 \description{The moving window method identifies for each single fossil diatom sample an optimal training set using DCA (CA, CCA) or simple distance measurement in combination with WA or WA-PLS error statistik. Downweighting of rare taxa can be chosen as non significant taxa can bee excluded }
 \usage{
-mw(train_set, train_env, core_data, method = c("wapls", "wa","mft"), 
-	comp = 4, val = c("boot", "loo", "10-cross"), run = 100, 
-	mwsize = c(20, 40, 60), dim = c(2, 3, 4), 
-	mw.type = c("dca", "ca", "cca","sample"), 
-	dist.m = "euclidean", rmsep.incl = TRUE, env.trans = FALSE,
-	spec.trans = FALSE,
-	rplot = TRUE, drop.non.sig = FALSE, min.occ = 1,scale=FALSE, dw=FALSE)
+mw(train_set, train_env, core_data, method = c("wapls", "wa", "mtf"),
+	comp = 4, val = c("boot", "loo", "10-cross"), run = 10,
+	mwsize = c(20, 40, 60), dim = c(2, 3, 4),
+	mw.type = c("dca", "ca", "sample", "cca"), dist.m = "euclidean",
+	rmsep.incl = TRUE, env.trans = FALSE, spec.trans = FALSE,
+	rplot = TRUE, drop.non.sig = FALSE, min.occ = 1, scale = FALSE,
+	dw = TRUE, selection = c("rand.test", "pred.error"))
 }
 
 \arguments{
@@ -33,6 +33,7 @@ mw(train_set, train_env, core_data, method = c("wapls", "wa","mft"),
   \item{min.occ}{minimum occurrence: all taxa with less than min.occ will be deleted from the training set}
   \item{scale}{should the data scaled up to 100 percent? (Default = FALSE)}
   \item{dw}{should rare taxa be downweighted? (see function downweight in the vegan package by J. Oksanen)}
+  \item{selection}{should the best window size be choosen based on the error of the transfer function (Huebener et al. 2008) or should be the randomisation test by van der Voet (1994) be used?}
 }
 \details{
 Using mw, for each sample 3 WA-PLS runs (default) are calculated using
@@ -40,7 +41,20 @@ Using mw, for each sample 3 WA-PLS runs (default) are calculated using
 sedimet (80-100 samples) core can take several minutes. Please try first with
 a small test set or with a low value for run (see examples), before running the whole reconstruction! At least the number of componentes (default is 4) can bee reduced to make the function faster. Data must be
 organised in the same way as running cca or dca in package vegan. This approach
-needs large training sets, like the combinded TP data set from EDDI. 
+needs large training sets, like the combinded TP data set from EDDI. If as selection rand.test is choosen
+the randomistation test of van der Voet (1994) will be used as following: Let k be the
+size of the smaller window and k+n the size of the larger window. For the transfer
+function based on k samples the sample specific error will be estimated
+(bootstrap or LOO) and additionally the prediction error will be estimated 
+for the n samples. These k+n prediction errors will than be compared with the 
+sample specific error of the transfer function based on k+n samples using the 
+randomisation test as described in the appendix of Van der Voet (1994). 
+If the error of the transfer function based on k samples for the k+n samples 
+is significant lower or just equal than the error of the transfer function 
+based on k+n samples, the smaller window size will be used to infer the 
+environmental parameter for the given test sample. If the prediction error 
+is higher for the transfer function based on k samples, the larger MW size 
+will be used to infer the environmental parameter for the given test sample.
 }
 
 \value{
@@ -73,4 +87,3 @@ fit<-mw(train_set.MV,train_env.MV,test,mwsize = c(40,60),run=5,
 }
 
 \keyword{ models }
-

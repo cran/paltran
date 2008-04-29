@@ -189,4 +189,3 @@ error<-as.matrix(error)
     }
     close.screen (all=TRUE)
 }
-

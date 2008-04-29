@@ -1,5 +1,5 @@
-
-wa<-function(...,d.plot=TRUE,env.trans=FALSE,spec.trans=FALSE,diagno=TRUE,val=c("none","10-cross","loo","boot"),run=10,scale=FALSE,seed=1,out=TRUE,desh.meth=c("class","inverse"),drop.non.sig=FALSE,min.occ=1)
+wa <-
+function(...,d.plot=TRUE,env.trans=FALSE,spec.trans=FALSE,diagno=TRUE,val=c("none","n.cross","loo","boot"),run=10,scale=FALSE,seed=1,out=TRUE,desh.meth=c("class","inverse"),drop.non.sig=FALSE,min.occ=1,nfold=10)
 {
     
     data<-list(...)
@@ -186,6 +186,7 @@ loo.wa<-function(train_set,train_env)
         
         loo1[i]<-sum(opt*test_set.c)/sum(test_set.c)
         }
+    names(loo1)<-row.names(train_set)
     dif<-loo1-train_env
     max_er.c<-max(abs(dif))
     mean_er.c<-mean(dif)
@@ -226,6 +227,7 @@ loo_pred.wa<-function(train_set,train_env,test_set)
         if(dim(test_set)[1]==1)
             loo_pred[,i]<-sum(opt_d*t(test_set.opt),na.rm=TRUE)/sum(test_set.opt)
       }
+    names(loo1)<-row.names(train_set)
     dif<-loo1-train_env
     max_er.c<-max(abs(dif))
     mean_er.c<-mean(dif)
@@ -244,7 +246,7 @@ loo_pred.wa<-function(train_set,train_env,test_set)
  
 ############################    cross validation ################################
 
-tencross.wa<-function(train_set,train_env,run1=run)
+tencross.wa<-function(train_set,train_env,run1=run,n.fold=nfold)
     {
     max_er.c<-NA
     mean_er.c<-NA
@@ -255,11 +257,11 @@ tencross.wa<-function(train_set,train_env,run1=run)
     loo1.b<-matrix(nrow=dim_ts,ncol=run1)
     loo1.k<-matrix(nrow=dim_ts,ncol=run1)
     c.cross<-NA
-    cross_number<-round(length(train_env)/10,0)
+    cross_number<-round((dim_ts/n.fold),0)
     set.seed(seed) 
-    for (i in seq_len(10))
+    for (i in seq_len(n.fold))
         c.cross[i]<-(i-1)*cross_number
-    c.cross[11]<-max(length(train_env))
+    c.cross[n.fold+1]<-max(length(train_env))
                 
     for (r in seq_len(run1))
     {                  
@@ -268,7 +270,7 @@ tencross.wa<-function(train_set,train_env,run1=run)
         train_env.b<-train_env[k,]
         loo1.b[,r]<-train_env.b
         loo1.k[,r]<-k
-        for (i in seq_len(10))
+        for (i in seq_len(n.fold))
         {
             c1<-c.cross[i]+1
             c2<-c.cross[i+1]
@@ -441,8 +443,8 @@ run_wa1<-wa1(train_set,train_env)
 
 if (val=="loo")
     val1<-"Leave-one-out"
-if (val=="10-cross") 
-    val1<-"10-fold-cross validation"
+if (val=="n.cross") 
+    val1<-"n-fold-cross validation"
 if (val=="boot")
     val1="bootstrap"
 
@@ -454,13 +456,15 @@ if (out=="TRUE")
     cat("",fill=TRUE)
     cat("",fill=TRUE)
     cat("type        = weighted averaging",fill=TRUE)
+    cat("method      =",desh.meth,fill=TRUE)
     cat("n samples   =",dim(train_set)[1],fill=TRUE)
     cat("n species   =",dim(train_set)[2],fill=TRUE)
     cat("val.-method =",val1,fill=TRUE) 
-    if (val=="10-cross")
+    if (val=="n.cross")
         {             
             cat("       seed =",seed,fill=TRUE)
             cat("        run =",run,fill=TRUE)
+            cat("     n.fold =",nfold,fill=TRUE)
         }
     if (val=="boot")
          {             
@@ -486,7 +490,7 @@ if (val=="loo")
         if (data_l==3)
             error<-loo_pred.wa(train_set,train_env,test_set)
     }    
-if (val=="10-cross")  
+if (val=="n.cross")  
             error<-tencross.wa(train_set,train_env)
 if (val=="boot")
      {   if (data_l==2)
@@ -521,12 +525,12 @@ if (data_l==2)
         results<-list(spec_n_train,n2_train,run_wa1[[1]],run_wa1[[7]],error_m,error[[5]])
         names(results)[[6]]<-"inferred train.set (loo)"
          }
-    if (val=="10-cross")
+    if (val=="n.cross")
         {
         results<-list(spec_n_train,n2_train,run_wa1[[1]],run_wa1[[7]],error_m,error[[5]],error[[6]],error[[7]])
-        names(results)[[6]]<-"mean(inferred train.set) (10-cross)"
-        names(results)[[7]]<-"sd(inferred train.set) (10-cross)"
-        names(results)[[8]]<-"inferred train.set (10-cross)"
+        names(results)[[6]]<-"mean(inferred train.set) (n.cross)"
+        names(results)[[7]]<-"sd(inferred train.set) (n.cross)"
+        names(results)[[8]]<-"inferred train.set (n.cross)"
         }
     
     if (val=="boot")
@@ -550,7 +554,7 @@ if (data_l==3)
         results<-list(spec_n_train,n2_train,run_wa1[[1]],run_wa1[[7]],error_m,spec_n_test,n_test.train,n2_test,run_wa[[4]])
     if (val=="loo")
         results<-list(spec_n_train,n2_train,run_wa1[[1]],run_wa1[[7]],error_m,error[[5]],spec_n_test,n_test.train,n2_test,run_wa[[4]],error[[6]],error[[7]],error[[8]])
-    if (val=="10-cross")
+    if (val=="n.cross")
         results<-list(spec_n_train,n2_train,run_wa1[[1]],run_wa1[[7]],error_m,error[[5]],error[[6]],spec_n_test,n_test.train,n2_test,run_wa[[4]])
     if (val=="boot")
         results<-list(spec_n_train,n2_train,run_wa1[[1]],run_wa1[[7]],error_m,error[[5]],error[[12]],error[[9]],error[[10]],spec_n_test,n_test.train,n2_test,run_wa[[4]],error[[13]],error[[14]],error[[15]])
@@ -578,7 +582,7 @@ if (data_l==3)
         names(results)[[12]]<-"sd(reconstruction_core.samples).val"
         names(results)[[13]]<-"reconstruction_core.samples.val"
         }
-    if (val=="10-cross")
+    if (val=="n.cross")
         {
         names(results)[[6]]<-"inferred train.set.val"
         names(results)[[7]]<-"sd(reconstruction_core.samples).val"
@@ -608,9 +612,7 @@ if (out=="TRUE" && val!="none")
         
       cat("",fill=TRUE)
    
-     # if (val=="10-cross")
-           # cat("RMSEP = ",mean(error_m[1,8]),fill=TRUE)
-        if (val=="boot")
+         if (val=="boot")
             {cat("s1       = ",error[[9]],  "          s2               = ",round(error[[10]],4),fill=TRUE)}
             cat("R2.c     = ",error_m[1,5],"          Mean-error.c     = ",round(error_m[1,6],4),fill=TRUE)
             cat("RMSEP    = ",error_m[1,8],"          Max-error.c      = ",round(error_m[1,7],4),fill=TRUE)
@@ -663,3 +665,4 @@ if(d.plot==TRUE)
 invisible(results)
 
 }
+

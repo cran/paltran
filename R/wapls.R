@@ -1,6 +1,5 @@
-
-
-wapls <-function(...,comp=4,d.plot=TRUE,plot.comp="RMSEP",env.trans=FALSE,spec.trans=FALSE,diagno=TRUE,seed=1,run=10,val=c("none","10-cross","loo","boot"),scale=FALSE,out=TRUE,drop.non.sig=FALSE,min.occ=1)
+wapls <-
+function(...,comp=4,d.plot=TRUE,plot.comp="RMSEP",env.trans=FALSE,spec.trans=FALSE,diagno=TRUE,seed=1,run=10,val=c("none","10-cross","loo","boot"),scale=FALSE,out=TRUE,drop.non.sig=FALSE,min.occ=1)
 {
 
     n_comp<-comp
@@ -161,7 +160,6 @@ wapls1<-function(...,n_comp=comp)
     z<-NA
     env_inf<-NA
     r.n1.pre<-NA
-    r.n1.pre<-NA
     score<-NA
     RMSE<-NA
     mean_error<-NA
@@ -197,13 +195,17 @@ wapls1<-function(...,n_comp=comp)
     r.n_all<-matrix(NA,ncol=n_comp,nrow=row)
     for (run in 1:n_comp)
     {
-        for(i in seq_len(col))
-            u[i]<-sum(r*train_set[,i],na.rm=TRUE)/sum(train_set[,i],na.rm=TRUE)       
+        #for(i in seq_len(col))
+           # u[i]<-sum(r*train_set[,i],na.rm=TRUE)/sum(train_set[,i],na.rm=TRUE)       
+        
+        u<-apply(train_set,2,function(x) sum(r*x,na.rm=TRUE)/sum(x,na.rm=TRUE))
+        
+        
         r.n<-as.vector(colSums(u*t(train_set),na.rm=TRUE)/train_set.rs)
         updated.opt[,run]<-u+sum_sd
         if (run>1)
             {
-                v<-sum(((train_set.rs*r.n)*r.n1[,(run-1)]))/sum(train_set.rs)
+                v<-sum(((train_set.rs*r.n)*r.n1[,(run-1)]))/divid
                 r.n<-r.n-(v*r.n1[,run-1])
             }
     
@@ -274,13 +276,21 @@ loo.wapls<-function(train_set,train_env,n_comp=comp)
         loo1[kn,]<-wapls1(train_set.c,train_env[-kn,],train_set[kn,])[[6]]
         }
     dif<-(loo1-train_env[,1])
-    for (k in seq_len(n_comp))
-    {
-    error1[k,3]<-max(abs(dif[,k]))
-    error1[k,2]<-mean(dif[,k])
-    error1[k,4]<-sqrt(sum((dif[,k])^2)/dim_row)
-    error1[k,1]<-summary(lm(loo1[,k]~train_env[,1]))$r.squared
-    }
+    #for (k in seq_len(n_comp))
+    #{
+    #error1[k,3]<-max(abs(dif[,k]))
+    #error1[k,2]<-mean(dif[,k])
+    #error1[k,4]<-sqrt(sum((dif[,k])^2)/dim_row)
+    #error1[k,1]<-summary(lm(loo1[,k]~train_env[,1]))$r.squared
+    #}
+    error1[,3]<-apply(dif,2,function(x) max(abs(x)))
+    error1[,2]<-apply(dif,2,function(x) mean(x))
+    error1[,4]<-apply(dif,2,function(x) sqrt(sum((x)^2)/dim_row))
+    error1[,1]<-apply(loo1,2,function(x) summary(lm(x~train_env[,1]))$r.squared)
+    
+    
+    
+    
     result<-list(error1[,1],error1[,2],error1[,3],error1[,4],loo1)
     
 result
@@ -817,3 +827,4 @@ if(d.plot==TRUE)
 #############################################################################################################################################################     
 results
 }
+

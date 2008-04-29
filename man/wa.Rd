@@ -5,10 +5,10 @@
 \description{This function computes with a given training set and a given environmental parameter a weighted averaging transfer function as used in paleolimnology. For the calculation of the model predicting error 10 fold cross validation, bootstrap ore Leave-on-out can bee chosen. Inverse or classical deshrinking are supported.} 
 \usage{
 wa(..., d.plot = TRUE, env.trans = FALSE, spec.trans = FALSE, 
-	diagno = TRUE, val = c("none", "10-cross", "loo", "boot"), 
+	diagno = TRUE, val = c("none", "n.cross", "loo", "boot"), 
 	run = 10, scale =FALSE, seed = 1,out = TRUE, 
 	desh.meth =c("class", "inverse"), 
-	drop.non.sig = FALSE,min.occ = 1)
+	drop.non.sig = FALSE,min.occ = 1,nfold = 10)
 }
 
 \arguments{
@@ -17,14 +17,15 @@ wa(..., d.plot = TRUE, env.trans = FALSE, spec.trans = FALSE,
   \item{env.trans}{Should the environmental parameter bee transformed? Type "sqrt" for square root and "log10" for the logarithm to the basis 10 are possible choices, default is FALSE.}
   \item{spec.trans}{Should the species data bee transformed? "sqrt" for square root and "log10" for the logarithm to the basis 10 are possible choices, default is FALSE.}
   \item{diagno}{should N2,number of non zero values bee calculated for the training set and test set? Default is TRUE }
-  \item{val}{validation method: one of "boot" (bootstrap), "loo" (Leave-on-out), or "10-cross" (10-fold cross validation)}
-  \item{run}{ if "boot" or "10-cross" were chosen: number of cycles to run }
+  \item{val}{validation method: one of "boot" (bootstrap), "loo" (Leave-on-out), or "n.cross" (n-fold cross validation)}
+  \item{run}{ if "boot" or "n.cross" were chosen: number of cycles to run }
   \item{scale}{should the data scaled up to 100 percent? (Default is FALSE)}
   \item{seed}{set the seed for the random generator (using boot or 10-cross), default = 1}
   \item{out}{should the results printed on the console?}
   \item{desh.meth}{what kind of deshrinking method should bee used "class"(classical deshrinking), or "inverse" (inverse deshrinking), default is "inverse" }
   \item{drop.non.sig}{should a taxon that have non significant response to the environmental variable bee deleted? The calculation, if there is a significant relation between a taxa and the environmental variable of interest, is undertaken using a generalized additive model (GAM) and the package mgcv. As a GAM only works if a taxon occurred several times, only those taxa will be included that occurred more than 5 times (k=3). }
   \item{min.occ}{minimum occurrence: all taxa with less than min.occ will be deleted from the training set}
+  \item{nfold}{what type of n-fold cross validation should be used?}
 }
 
 \value{

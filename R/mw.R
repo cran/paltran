@@ -1,6 +1,5 @@
-
-
-mw<-function(train_set,train_env,core_data,method=c("wapls","wa","mft"),comp=4,val=c("boot","loo","10-cross"),run=100,mwsize=c(20,40,60),dim=c(2,3,4),mw.type=c("dca","ca","cca","sample"),dist.m="euclidean",rmsep.incl=TRUE,env.trans=FALSE,spec.trans=FALSE,rplot=TRUE,drop.non.sig=FALSE,min.occ=1,scale=FALSE,dw=FALSE)
+mw <-
+function(train_set,train_env,core_data,method=c("wapls","wa","mtf"),comp=4,val=c("boot","loo","10-cross"),run=10,mwsize=c(20,40,60),dim=c(2,3,4),mw.type=c("dca","ca","sample","cca"),dist.m="euclidean",rmsep.incl=TRUE,env.trans=FALSE,spec.trans=FALSE,rplot=TRUE,drop.non.sig=FALSE,min.occ=1,scale=FALSE,dw=TRUE,selection=c("rand.test","pred.error"))
 
 {
 test_set<-core_data
@@ -8,8 +7,18 @@ train_set<-train_set[,colSums(train_set)!=0]
 test_set<-test_set[,colSums(test_set)!=0]
 ncomp<-comp
 
+if (max(mwsize)>dim(train_set)[1])
+    stop("Window size is larger than the used training set!")
 
+if (any(is.na(train_set)==TRUE))
+    stop("NA's are in the training set")
+if (any(is.na(train_env)==TRUE))
+    stop("NA's are in the environmental data")
 
+if (any(is.na(core_data)==TRUE))
+    stop("NA's are in the core data")
+    
+    
 if (missing(dim)) 
         dim=2
 if (missing(val)) 
@@ -23,6 +32,8 @@ if (mw.type=="sample")
     rplot<-FALSE
 if (mw.type=="cca") 
     rplot<-FALSE
+if (missing(selection)) 
+    selection<-"pred.error"
 
 
 
@@ -208,7 +219,10 @@ if(val%in%c("boot","loo"))
 cat("",fill=TRUE)
 
 cat("",fill=TRUE)
-for(i in 1:row1)
+
+if (selection=="pred.error")
+{
+    for(i in 1:row1)
     {
         for (k in 1:(number.mw_ds))
             {
@@ -231,8 +245,8 @@ for(i in 1:row1)
                 test_names<-row.names(dist1[order(dist1[,start]),])[1:nn.number]
                 train_set.mw<-train_set[test_names,]
                 train_env.mw<-train_env[test_names,]
-                test_set.mw<-as.matrix(test_set[i,])
-                
+                #test_set.mw<-as.matrix(test_set[i,])
+                test_set.mw<-as.matrix(t(test_set[i,]))  
                 
                 if (rplot==TRUE && mw.type!="cca")
                 {
@@ -274,9 +288,9 @@ for(i in 1:row1)
                             }
                     }
           
-                if (method=="mft")
+                if (method=="mtf")
                     {
-                        mwstat<-mft(train_set.mw,train_env.mw,test_set,d.plot="FALSE",val="loo",out="FALSE",scale=TRUE)
+                        mwstat<-mtf(train_set.mw,train_env.mw,test_set,d.plot="FALSE",val="loo",out="FALSE",scale=TRUE)
                         wa_per<-c(mwstat$performance,1,1)
                         wapls_comp.mw[k,]<-wa_per
                         mw_env[k]<-mwstat[[5]][i]
@@ -312,8 +326,210 @@ for(i in 1:row1)
     
     }
 
+}
 
-res<-list(mw_envstat.end,mw_env.end,mw_env.end.val,mw_env.end.sd)
+if (selection=="rand.test")
+{
+for(i in 1:row1)
+    {
+        #for (k in 1:(number.mw_ds))
+         k<-1
+       if (method=="wapls")
+         {
+         
+         repeat
+            {
+            if (rplot==TRUE && mw.type!="cca")
+                {
+                    par(fig=c(0,1,0,0.9))
+                    par(mar=c(5,5,0,2))
+                    plot(train_scores[,1],train_scores[,2])
+                    points(test_scores[,1],test_scores[,2],col="green",pch=19)
+                    points(test_scores[c(1:i),1],test_scores[c(1:i),2],col="orange",pch=19) 
+                }
+                nn.number<-mwsize[k]
+                start<-row+i
+                test_names<-row.names(dist1[order(dist1[,start]),])[1:nn.number]
+                train_set.mw<-train_set[test_names,]
+                train_env.mw<-train_env[test_names,]
+                
+                if (rplot==TRUE && mw.type!="cca")
+                {
+                    points(test_scores[i,1],test_scores[i,2],col="red",pch=19,cex=2)     
+                    points(train_scores[,1][row.names(train_scores)%in%test_names],train_scores[,2][row.names(train_scores)%in%test_names],col="blue",pch=19)
+                
+                par(fig=c(0,1,0.6,1),new=TRUE)
+                par(mar=c(0,5,0,0))
+                plot(train_scores[,1],train_scores[,2],type="n",axes=FALSE,xlab="",ylab="")
+                legend("topleft",c("training set","MW-training set", "core samples", "finish core samples"),pt.cex=1,cex=1,pch=c(21,19,19,19),col=c(1,"blue","green","orange"),box.lty=0,ncol=2)
+                }
+                
+                nn.number1<-mwsize[k+1]
+                start1<-row+i
+                test_names<-row.names(dist1[order(dist1[,start1]),])[1:nn.number1]
+                train_set1.mw<-train_set[test_names,]
+                train_env1.mw<-train_env[test_names,]
+                      
+                test_set.mw<-as.matrix(test_set[i,])         
+             
+                
+                     
+                #
+                    {
+                        mwstat<-wapls(train_set.mw,train_env.mw,train_set1.mw[(mwsize[k]+1):mwsize[k+1],],d.plot="FALSE",diagno="FALSE",comp=ncomp,val=val,run=run,out="FALSE",drop.non.sig=drop.non.sig,min.occ=min.occ,scale=scale)
+                        c<-1
+                        repeat
+                            {  e1<-mwstat[[7]][,c]-train_env.mw
+                               e2<-mwstat[[7]][,c+1]-train_env.mw
+                               p<-rand.test(e1,e2)[3]
+                               if (p>0.05) break
+                               if (p<0.05 & sum(e1^2)/length(e1)>sum(e2^2)/length(e1))
+                                c<-c+1
+                               if (p<0.05 & sum(e1^2)/length(e1)<sum(e2^2)/length(e1)) break
+                               if (c==comp) break 
+                            } 
+                               
+                        mwstat1<-wapls(train_set1.mw,train_env1.mw,d.plot="FALSE",diagno="FALSE",comp=ncomp,val=val,run=run,out="FALSE",drop.non.sig=drop.non.sig,min.occ=min.occ,scale=scale)
+                        c1<-1
+                        repeat
+                            {  e1<-mwstat1[[7]][,c]-train_env1.mw
+                               e2<-mwstat1[[7]][,c+1]-train_env1.mw
+                               p<-rand.test(e1,e2)[3]
+                               if (p>0.05) break
+                               if (p<0.05 & sum(e1^2)/length(e1)>sum(e2^2)/length(e1))
+                                c1<-c1+1
+                               if (p<0.05 & sum(e1^2)/length(e1)<sum(e2^2)/length(e1)) break
+                               if (c1==comp) break 
+                            } 
+                       e1<-c(mwstat[[7]][,c],mwstat[[14]][,c])-train_env1.mw
+                       e2<-mwstat1[[7]][,c1]-train_env1.mw             
+                       p<-rand.test(e1,e2)[3]
+                       p
+                      }
+             
+            
+             
+             if (p<0.05) break
+             if (p>0.05 && (sum(e1^2)/length(e1)<sum(e2^2)/length(e2))) break
+             k<-k+1
+             
+             if (k>=number.mw_ds) break            
+            
+            }
+            nn.number<-mwsize[k]
+            start<-row+i
+            test_names<-row.names(dist1[order(dist1[,start]),])[1:nn.number]
+            train_set.mw<-train_set[test_names,]
+            train_env.mw<-train_env[test_names,]
+            test_set.mw<-as.matrix(t(test_set[i,]))         
+            mwstat<-wapls(train_set.mw,train_env.mw,test_set,d.plot="FALSE",diagno="FALSE",comp=ncomp,val=val,run=run,out="FALSE",drop.non.sig=drop.non.sig,min.occ=min.occ,scale=scale)
+            c<-1
+            repeat
+                {  e1<-mwstat[[7]][,c]-train_env.mw
+                   e2<-mwstat[[7]][,c+1]-train_env.mw
+                   p<-rand.test(e1,e2)[3]
+                   if (p>0.05) break
+                   if (p<0.05 & sum(e1^2)/length(e1)>sum(e2^2)/length(e1))
+                    c<-c+1
+                   if (p<0.05 & sum(e1^2)/length(e1)<sum(e2^2)/length(e1)) break
+                   if (c==comp) break 
+                } 
+    
+            mw_env.end[i]<-mwstat$reconstruction_core.samples[i,c]
+            if (val%in%c("boot","loo"))
+                { 
+                    mw_env.val[i]<-mwstat$"mean(reconstruction_core.samples).val"[i]   
+                    mw_env.sd[i]<-mwstat$"sd(reconstruction_core.samples).val"[i]     
+                }
+            mw_envstat.end[i,]<-c(mwstat$"performance"[c,1:8],round(mwstat$"performance"[c,9],0),trunc(nn.number))
+           
+           }
+           
+           
+    if (method=="wa")
+             {
+    k<-1
+             repeat
+                {
+            if (rplot==TRUE && mw.type!="cca")
+                {
+                    par(fig=c(0,1,0,0.9))
+                    par(mar=c(5,5,0,2))
+                    plot(train_scores[,1],train_scores[,2])
+                    points(test_scores[,1],test_scores[,2],col="green",pch=19)
+                    points(test_scores[c(1:i),1],test_scores[c(1:i),2],col="orange",pch=19) 
+                }
+                nn.number<-mwsize[k]
+                start<-row+i
+                test_names<-row.names(dist1[order(dist1[,start]),])[1:nn.number]
+                train_set.mw<-train_set[test_names,]
+                train_env.mw<-train_env[test_names,]
+                if (rplot==TRUE && mw.type!="cca")
+                    {
+                        points(test_scores[i,1],test_scores[i,2],col="red",pch=19,cex=2)     
+                        points(train_scores[,1][row.names(train_scores)%in%test_names],train_scores[,2][row.names(train_scores)%in%test_names],col="blue",pch=19)
+                        par(fig=c(0,1,0.6,1),new=TRUE)
+                        par(mar=c(0,5,0,0))
+                        plot(train_scores[,1],train_scores[,2],type="n",axes=FALSE,xlab="",ylab="")
+                        legend("topleft",c("training set","MW-training set", "core samples", "finish core samples"),pt.cex=1,cex=1,pch=c(21,19,19,19),col=c(1,"blue","green","orange"),box.lty=0,ncol=2)
+                    }
+                nn.number1<-mwsize[k+1]
+                start1<-row+i
+                test_names<-row.names(dist1[order(dist1[,start1]),])[1:nn.number1]
+                train_set1.mw<-train_set[test_names,]
+                train_env1.mw<-train_env[test_names,]
+                      
+                test_set.mw<-as.matrix(test_set[i,])         
+             
+               
+                 mwstat<-wa(train_set.mw,train_env.mw,train_set1.mw[(mwsize[k]+1):mwsize[k+1],],d.plot="FALSE",diagno="FALSE",val=val,run=run,out="FALSE",drop.non.sig=drop.non.sig,min.occ=min.occ,scale=scale)
+                 
+                 mwstat1<-wa(train_set1.mw,train_env1.mw,d.plot="FALSE",diagno="FALSE",val=val,run=run,out="FALSE",drop.non.sig=drop.non.sig,min.occ=min.occ,scale=scale)      
+                 e1<-c(mwstat[[6]],mwstat[[13]])-train_env1.mw
+                 e2<-mwstat1[[6]]-train_env1.mw             
+                 p<-rand.test(e1,e2)[3]
+                 p 
+                 if (p<0.05) break
+                 if (p>0.05 && (sum(e1^2)/length(e1)<sum(e2^2)/length(e2))) break
+                 
+                 #if (p<0.05 & sum(e1^2)/length(e1)>sum(e2^2)/length(e1))
+                       k<-k+1        
+                 #if (p<0.05 & sum(e1^2)/length(e1)<sum(e2^2)/length(e1)) break
+                 
+             
+                 if (k>=number.mw_ds) break  
+             
+             }
+             
+            nn.number<-mwsize[k]
+            start<-row+i
+            test_names<-row.names(dist1[order(dist1[,start]),])[1:nn.number]
+            train_set.mw<-train_set[test_names,]
+            train_env.mw<-train_env[test_names,]
+            test_set.mw<-as.matrix(t(test_set[i,]))         
+            mwstat<-wa(train_set.mw,train_env.mw,test_set,d.plot="FALSE",diagno="FALSE",val=val,run=run,out="FALSE",drop.non.sig=drop.non.sig,min.occ=min.occ,scale=scale)
+            
+            mw_env.end[i]<-mwstat$"reconstruction_core.samples"[i]
+        
+            if (val%in%c("boot","loo"))
+                { 
+                    mw_env.val[i]<-mwstat$"mean(reconstruction_core.samples).val"[i]   
+                    mw_env.sd[i]<-mwstat$"sd(reconstruction_core.samples).val"[i]     
+                }
+            mw_envstat.end[i,]<-c(mwstat$"performance"[1:8],NA,trunc(nn.number))
+         
+        
+        
+        
+     
+     
+     
+     }
+
+
+}
+}
+res<-list(mw_envstat.end,mw_env.end,mw_env.val,mw_env.sd)
 names(res)[[1]]<-"sample.performance"
 names(res)[[2]]<-"reconstruction"
 names(res)[[3]]<-"mean(reconstruction).val"
@@ -322,3 +538,4 @@ inf_test<-mw_env.end
 x<-c(1:length(inf_test))
 res
 }
+

@@ -1,5 +1,5 @@
-
-mft<-function(...,d.plot=TRUE,scale=TRUE,datatype=TRUE,min.occ=4,set.zero=FALSE,not.av=c("zero","lower","max"),val="loo",class=c(1,5,10,30,60),out=TRUE) 
+mtf <-
+function(...,d.plot=TRUE,scale=TRUE,datatype=TRUE,n=4,set.zero=FALSE,not.av=c("zero","lower","max"),val="loo",class=c(1,5,10,30,60),out=TRUE) 
 {
     data<-list(...)
     train_set <- as.matrix(data[[1]])
@@ -16,7 +16,7 @@ mft<-function(...,d.plot=TRUE,scale=TRUE,datatype=TRUE,min.occ=4,set.zero=FALSE,
     if (length(data) <= 2) 
         test_set <- NA
     train_set<-train_set[,colSums(train_set)!=0]
-    n<-min.occ
+    
     
     
   
@@ -66,7 +66,7 @@ mft<-function(...,d.plot=TRUE,scale=TRUE,datatype=TRUE,min.occ=4,set.zero=FALSE,
         }
       for (ln in (length(as.numeric(levels(as.factor(spec.pa))))):2)
         {
-          if (length(spec.pa[spec.pa==as.numeric(levels(as.factor(spec.pa)))[ln]])<=4)
+          if (length(spec.pa[spec.pa==as.numeric(levels(as.factor(spec.pa)))[ln]])<=n)
             {
                 if (set.zero==TRUE)
                     spec.pa[spec.pa==as.numeric(levels(as.factor(spec.pa)))[ln]]<-0
@@ -217,7 +217,7 @@ if (out==TRUE)
                  }
             for (ln in (length(as.numeric(levels(as.factor(spec.pa))))):2)
                 {
-                    if (length(spec.pa[spec.pa==as.numeric(levels(as.factor(spec.pa)))[ln]])<=4)
+                    if (length(spec.pa[spec.pa==as.numeric(levels(as.factor(spec.pa)))[ln]])<=n)
                         {
                             if (set.zero==TRUE)
                                spec.pa[spec.pa==as.numeric(levels(as.factor(spec.pa)))[ln]]<-0
@@ -363,7 +363,7 @@ if (val=="loo")
                 spec.pa<-train_set.paloo[,i]
                 for (ln in (length(as.numeric(levels(as.factor(spec.pa))))):2)
                   {
-                    if (length(spec.pa[spec.pa==as.numeric(levels(as.factor(spec.pa)))[ln]])<=4)
+                    if (length(spec.pa[spec.pa==as.numeric(levels(as.factor(spec.pa)))[ln]])<=n)
                         {
                             if (set.zero==TRUE)
                                 spec.pa[spec.pa==as.numeric(levels(as.factor(spec.pa)))[ln]]<-0
@@ -490,7 +490,7 @@ if (length(data)==3 & val=="loo")
                  }
             for (ln in (length(as.numeric(levels(as.factor(spec.pa))))):2)
                 {
-                    if (length(spec.pa[spec.pa==as.numeric(levels(as.factor(spec.pa)))[ln]])<=4)
+                    if (length(spec.pa[spec.pa==as.numeric(levels(as.factor(spec.pa)))[ln]])<=n)
                         {
                             if (set.zero==TRUE)
                                spec.pa[spec.pa==as.numeric(levels(as.factor(spec.pa)))[ln]]<-0
@@ -744,3 +744,4 @@ if (d.plot==TRUE)
 invisible(results)
 
 }
+
