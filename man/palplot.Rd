@@ -1,65 +1,53 @@
 \name{palplot}
 \alias{palplot}
-%- Also NEED an '\alias' for EACH other topic documented here.
-\title{Plotting a simple stratigraphic plot for paleoecology}
-\description{
-  Plotting a simple stratigraphic plot for paleoecology. To analyse the reconstructed environmental parameters a trend line 
-can bee drawn. 
-}
-\usage{
-palplot(..., col = "red", trend = TRUE, trendcol = "gray90", lty = 1, lwd = 1, k = FALSE, polyg = TRUE, colpoly = "gray90", trans = FALSE, meth = "loess", span = 0.2, conf.t = TRUE, xlab = "inferred env. factor", ylab = "sample", main = "reconstruction", cex = 1.5, pch = 20, type = "p")
-}
-%- maybe also 'usage' for other objects documented here.
+\title{plotting a simple plot for paleolimnology}
+\description{Before exporting the results of wa, wapls or mw functions to C2 or TILIA simple stratigraphic plots can bee done with palplot including several variables to cheque the results. For each variable the colour and the plot style can be chosen, error bars and trend lines can be added.}
+\usage{palplot(..., age = NA, error.plot = FALSE, error = 0, ptype = "b",
+	error.ptype = "b", p.col = "black", 
+	p.lty = 1, p.xlab = NULL, cex.main = 1,
+	cex.axis = 1, dis = 0.15, p.main = NULL,
+	y.lab = "sample", trend = 0, span = 0.1)}
+
 \arguments{
-  \item{\dots}{x,y: x (required) - inferred environmental parameter, y (if in hand) age of the samples}
-  \item{col}{ color of points}
-  \item{trend}{TRUE/FALSE - should a trend line bee drawn}
-  \item{trendcol}{ color of the trend line}
-  \item{lty}{ line type of the trend line,see ?plot for more information  }
-  \item{lwd}{ line width of the trend line,see ?plot for more information  }
-  \item{k}{if a GAM is used for the trend: number of knots }
-  \item{polyg}{Should the trend shaded?}
-  \item{colpoly}{color of the shaded trend }
-  \item{trans}{ are the data tranformed? Here they can be backtransformed: "log10" for log10 transformed data,
- "log" for ln transformed data and "sqrt" for sqrt transformed data }
-  \item{meth}{ method for analysing the trend: "loess" or "gam" }
-  \item{span}{ span of the loess function }
-  \item{conf.t}{should a confidence intervall bee calculated for the trend? }
-  \item{xlab}{label x axis}
-  \item{ylab}{label x axis  }
-  \item{main}{label main}
-  \item{cex}{size of symbols}
-  \item{pch}{symbols, see ?plot for more information  }
-  \item{type}{"p" for points, "l" for line, "b" for both}
+  \item{...}{required: matrixes, vectors or data frames of species data and or reconstructed environmental parameters}
+  \item{age}{if available: a vector including the age of the samples}
+  \item{error.plot}{should error bars be included?}
+  \item{error}{vector or matrix included the error}
+  \item{ptype}{how should the variables be plotted? String or vector: "h" for bars, "p" for points, "l" for line, "b" for both line and points}
+  \item{error.ptype}{how should the errors be plotted? String or vector: "b" for error bars, "p" for shaded regions}
+  \item{p.col}{string or vector: colour of the plots}
+  \item{p.lty}{if "l" is chosen for p.type, the line type can be chosen. string or vector }
+  \item{p.xlab}{string or vector: labels of the x axis of each variable }
+  \item{cex.main}{numeric or vector: size of the main of the plots for each variable }
+  \item{cex.axis}{numeric or vector: size of x axis labels }
+  \item{dis}{distance between the single plots}
+  \item{p.main}{string or vector: main of the plots for each variable }
+  \item{y.lab}{string: label of the y axis }
+  \item{trend}{should a trend line be plotted? String or vector}
+  \item{span}{what span should be used for the trend lines}
 }
+\author{ Sven Adler}
 
-\value{
-  
-  \item{env.inferred }{inferred environmental parameter}
-  \item{env.trend }{fitted values of the estimated trend}
-  \item{trend.conf.up }{fitted values of the estimated confidence intervall}
-\item{trend.conf.un }{fitted values of the estimated confidence intervall}
-\item{summary.trend }{summary of the trend}
-
-}
-
-\author{Sven Adler, sven.adler2@uni-rostock.de, 
-University Rostock, 
-Institute for Biosciences, 
-General and Systematic Botany, 
-Germany  }
-
-
+\seealso{ package analogue (G. Simpson) or package palaeo (S. Juggins) }
 \examples{
-data(age_dud)
+data(age.dud)
 data(dud.df)
 data(train_set.MV)
 data(train_env.MV)
+try<-wa(train_set.MV,train_env.MV,dud.df,val="boot",run=10)     
 
-fit1<-wa(train_set.MV,train_env.MV,dud.df)
-palplot(fit1$reconstruction,age_dud)
-palplot(fit1$reconstruction,age_dud,trans="log10",main="TP for lake Dudinghausen", ylab="TP")
+spec<-c(23,24,217,218,223,228)
+c<-c(rep(4,6),2,3)
+t<-c(rep("h",6),"l","p")
+x<-c(rep("abundance",6),"n","mug/l")
+tr<-c(rep(0,7),1)
+palplot(dud.df[,spec],try[[12]],10^try[[13]],trend=tr,
+	cex.axis=0.8,p.col=c,ptype=t,p.main=c(names(dud.df[,spec]),
+	"N2","inf. log(TP)"),dis=0.2,p.xlab=x)
+
+palplot(try[[14]],ptype="l",error=1.96*try[[15]],
+	error.ptype="p",error.plot=TRUE,p.col="blue",age=age.dud[,1])                        
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{environment }
+
+\keyword{hplot}
+

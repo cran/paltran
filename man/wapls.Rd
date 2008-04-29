@@ -1,65 +1,65 @@
 \name{wapls}
 \alias{wapls}
-%- Also NEED an '\alias' for EACH other topic documented here.
-\title{ weighted averaging - partial least square (wa-pls) regression for paleoecology }
-\description{
-  This function computes with a given training set and environmental parameter a weighted averaging -
-partial least square (WA-PLS) transfer function as used in paleolimnology. For error estimation a 10 fold cross validation procedure
-is choosen: For large data sets (and a high number of components) the calculation time will be 25 seconds and more. The last column of the
-output of the performance is needed for MW, for simple WA-PLS this can bee ignored.)
-}
+
+\title{weighted averaging - partial least square (WA-PLS) regression for paleoecology }
+\description{This function computes with a given training set and environmental parameter a weighted averaging - partial least square (WA-PLS) transfer function as used in paleolimnology. For the calculation of the model predicting error 10 fold cross validation, bootstrap, ore Leave-on-out can bee chosen. }
 \usage{
-wapls(..., n_comp = 4, d.plot = TRUE, plot.comp = "RMSEP", env.trans = FALSE, spec.trans = FALSE, diagno = TRUE)
+wapls(..., comp = 4, d.plot = TRUE, plot.comp = "RMSEP", env.trans = FALSE,
+	spec.trans = FALSE, diagno = TRUE, seed = 1, run = 10,
+	val = c("none", "10-cross", "loo", "boot"), scale =FALSE, 
+	out = TRUE, drop.non.sig = FALSE, min.occ = 1)
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
-  \item{\dots}{x,y,z: required: species training set (x) as matrix and related environmental parameter (y). 
-optional: test set(z) -  species data from a sediment core }
-  \item{n_comp}{ number of components that should bee extract}
-  \item{d.plot}{TRUE/FALSE: if TRUE diagnostic plots are given at the end of the analysis  }
-  \item{plot.comp}{"RMSEP": the diagnostig plots are done automatical for that component with the lowest RMSEP}
-  \item{env.trans}{should the environmental parameter bee transformed? "sqrt" for square root
-and "log10" for logarithm to the basis 10 are possible, choices, default is FALSE}
-  \item{spec.trans}{should the species data bee transformed? "sqrt" for square root
-and "log10" for logarithm to the basis 10 are possible, choices, default is FALSE}
-  \item{diagno}{should N2,number of non zero values bee calculated for the training set and test set? }
+  \item{\dots}{required x,y: a matrix or data frame of the species training set (x) and a vector or data frame of the related environmental parameter (y). optional: core samples (z) - vector or data frame of species data from a sediment core.}
+  \item{comp}{number of components that will be calculated}
+  \item{d.plot}{TRUE/FALSE: if TRUE diagnostic plots are given at the end of the analysis.}
+  \item{plot.comp}{if "RMSEP" is chosen, the diagnostic plot for that component is given with the lowest RMESP }
+  \item{env.trans}{should the environmental parameter bee transformed? "sqrt" for square root and "log10" for the logarithm to the basis 10 are possible choices, default is FALSE.}
+  \item{spec.trans}{should the species data bee transformed? "sqrt" for square root and "log10" for the logarithm to the basis 10 are possible choices, default is FALSE.}
+  \item{diagno}{should N2,number of non zero values bee calculated for the training set and test set? Default is TRUE }
+  \item{seed}{set the seed for the random generator (using boot or 10-cross), default = 1}
+  \item{run}{if "boot" or "10-cross" were chosen: number of cycles to run }
+  \item{val}{validation method: one of "boot"(bootstrap), "loo"(Leave-on-out), or "10-cross"(10-fold cross validation) }
+  \item{scale}{should the data scaled up to 100 percent? (Default is FALSE)}
+  \item{out}{should the results printed on the console?}
+  \item{drop.non.sig}{should a taxon that have non significant response to the environmental variable bee deleted? The calculation, if there is a significant relation between a taxa and the environmental variable of interest, is undertaken using a generalized additive model (GAM) and the package mgcv. As a GAM only works if a taxon occurred several times, only those taxa will be included that occurred more than 5 times (k=3). }
+  \item{min.occ}{minimum occurrence: all taxa with less than min.occ will be deleted from the training set}
 }
-
+\details{
+ The 10-fold cross validation is much more slower than the bootstrap or Leave-one-out, because 10 times more wapls-runs must bee performed than using e.g. bootstrap (within the same number of runs). The RMSEP of Leave one out is slightly different from C2. In this algorithm before each run of the loop the new training set (each time one sample is taken out) is controlled for zero species (the same procedure as in wa, there C2 does the same). In general when comparring the results of C2 and paltran, be shure, that the decimalplaces of the data in both training sets are equal (e.g. chose scale=T and the option percent data in C2). 
+}
 \value{
- 
-  \item{non_z_train }{Number of non zero species in each sample of the training set}
-  \item{N2_train }{Hill's N2 of each sampel of the training set}
-  \item{scores }{site scores of the training set samples}
-  \item{inferred.env_train }{inferred environmental parameter for the training set}
-  \item{non_z_test }{Number of non zero species in each sample of the test set}
-  \item{N2_test}{Hill's N2 of each sampel of the test set}
-  \item{reconstruction }{reconstructed environmental parameter for the samples of the core}
-  \item{performance}{performance of the wa-pls regression}
-  
+
+  \item{species in train.set }{Number of non zero species in each sample of the training set}
+  \item{N2 train.set  }{Hill's N2 of each sample of the training set}
+\item{sample scores }{sample scores of the training set}  
+\item{inferred train.set  }{inferred environmental parameter for the training set}
+\item{performance  }{performance of the wa-pls-regression }
+\item{inferred train.set.val  }{nferred environmental parameter for the training set using Leave-on-out }
+\item{species in core.samples }{Number of non zero species in each sample of the core data set}
+\item{n species core.samples in train.set }{How many species in the core samples are represented in the training set}
+\item{N2 in core.samples  }{Hill's N2 of each sample of the core data}
+\item{reconstruction_core.samples  }{reconstructed environmental parameter for the samples of the core }
+\item{mean(reconstruction_core.samples).val  }{mean reconstructed environmental parameter for the samples of the core using "boot" or "loo" }
+\item{sd(reconstruction_core.samples).val }{standard deviation of the reconstructed environmental parameter for the samples of the core using "boot" or "loo" }
+\item{s1 (boot)}{component s1 of the bootstrap}
+\item{s2 (boot)}{component s1 of the bootstrap}
+\item{mean(inferred train.set).val }{mean inferred environmental variable for the training set using "boot"}
+\item{sd(inferred train.set).val }{standard deviation of inferred environmental variable for the training set using "boot"}
+
 }
-\references{ter Braak, C.J.F. & Juggins, S. 1993. Weighted averaging partial least squares regression WA-PLS: 
-an improved method for reconstructing environmental variables from species assemblages.
-Hydrobiologia 269:485-502.}
-\author{Sven Adler, sven.adler2@uni-rostock.de
-University Rostock, 
-Institute for Biosciences, 
-General and Systematic Botany, 
-Germany}
+\references{ter Braak, C.J.F. & Juggins, S. 1993. Weighted averaging partial least squares regression WA-PLS: an improved method for reconstructing environmental variables from species assemblages. Hydrobiologia 269:485-502. }
+\author{Sven Adler}
 
-
-\seealso{wa, mwtraf, pom, package analogue (Simpson, 2008) for wa and MAT }
+\seealso{package analogue by G. Simpson  }
 \examples{
-data(age_dud)
-data(dud.df)
 data(train_set.MV)
 data(train_env.MV)
+data(dud.df)
+try<-wapls(train_set.MV,train_env.MV,dud.df,val="boot",run=5)
 
-fit1<-wapls(train_set.MV,train_env.MV,dud.df)
-names(fit1)
-palplot(fit1$reconstruction[,1],age_dud)
-palplot(fit1$reconstruction[,1],age_dud,trans="log10")
 
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{environment }
+
+\keyword{models }
